@@ -6,3 +6,4 @@ run:
 test:
 	go test ./lexer
 	go test ./ast
+	go test ./parser
