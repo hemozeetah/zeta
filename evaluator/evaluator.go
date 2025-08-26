@@ -29,10 +29,22 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return object.NewError("identifier not found: %s", node.Value)
 
 	case *ast.PrefixExpression:
-		return nil
+		right := Eval(node.Right, env)
+		if object.IsError(right) {
+			return right
+		}
+		return evalPrefixExpression(node.Operator, right)
 
 	case *ast.InfixExpression:
-		return nil
+		left := Eval(node.Left, env)
+		if object.IsError(left) {
+			return left
+		}
+		right := Eval(node.Right, env)
+		if object.IsError(right) {
+			return right
+		}
+		return evalInfixExpression(left, node.Operator, right)
 
 	case *ast.VarStatement:
 		value := Eval(node.Value, env)
@@ -111,4 +123,85 @@ func evalExpressions(expressions []ast.Expression, env *object.Environment) []ob
 		result = append(result, evaluated)
 	}
 	return result
+}
+
+func evalPrefixExpression(operator string, right object.Object) object.Object {
+	switch operator {
+	case "+":
+		if right.Type() != object.INTEGER_OBJ {
+			return object.NewError("unknown operator: +%s", object.ObjectMap[right.Type()])
+		}
+		value := right.(*object.Integer).Value
+		return &object.Integer{Value: value}
+
+	case "-":
+		if right.Type() != object.INTEGER_OBJ {
+			return object.NewError("unknown operator: -%s", object.ObjectMap[right.Type()])
+		}
+		value := right.(*object.Integer).Value
+		return &object.Integer{Value: -value}
+
+	case "!":
+		value := false
+		switch right := right.(type) {
+		case *object.Boolean:
+			value = (right.Value == false)
+		case *object.Integer:
+			value = (right.Value == 0)
+		case *object.String:
+			value = (len(right.Value) == 0)
+		}
+		return &object.Boolean{Value: value}
+
+	default:
+		return object.NewError("unknown operator: %s%s", operator, object.ObjectMap[right.Type()])
+	}
+}
+
+func evalInfixExpression(left object.Object, operator string, right object.Object) object.Object {
+	switch {
+	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
+		leftVal := left.(*object.Integer).Value
+		rightVal := right.(*object.Integer).Value
+		switch operator {
+		case "+":
+			return &object.Integer{Value: leftVal + rightVal}
+		case "-":
+			return &object.Integer{Value: leftVal - rightVal}
+		case "*":
+			return &object.Integer{Value: leftVal * rightVal}
+		case "/":
+			return &object.Integer{Value: leftVal / rightVal}
+		case "<":
+			return &object.Boolean{Value: leftVal < rightVal}
+		case ">":
+			return &object.Boolean{Value: leftVal > rightVal}
+		case "==":
+			return &object.Boolean{Value: leftVal == rightVal}
+		case "!=":
+			return &object.Boolean{Value: leftVal != rightVal}
+		default:
+			return object.NewError("unknown operator: %s %s %s", object.ObjectMap[left.Type()], operator, object.ObjectMap[right.Type()])
+		}
+
+	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ:
+		if operator != "+" {
+			return object.NewError("unknown operator: %s %s %s", object.ObjectMap[left.Type()], operator, object.ObjectMap[right.Type()])
+		}
+		leftVal := left.(*object.String).Value
+		rightVal := right.(*object.String).Value
+		return &object.String{Value: leftVal + rightVal}
+
+	case operator == "==":
+		return &object.Boolean{Value: left == right}
+
+	case operator == "!=":
+		return &object.Boolean{Value: left != right}
+
+	default:
+		if left.Type() != right.Type() {
+			return object.NewError("type mismatch: %s %s %s", object.ObjectMap[left.Type()], operator, object.ObjectMap[right.Type()])
+		}
+		return object.NewError("unknown operator: %s %s %s", object.ObjectMap[left.Type()], operator, object.ObjectMap[right.Type()])
+	}
 }

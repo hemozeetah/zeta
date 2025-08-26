@@ -21,6 +21,16 @@ const (
 	ERROR_OBJ
 )
 
+var ObjectMap = map[ObjectType]string{
+	INTEGER_OBJ:  "INTEGER_OBJ",
+	STRING_OBJ:   "STRING_OBJ",
+	BOOLEAN_OBJ:  "BOOLEAN_OBJ",
+	FUNCTION_OBJ: "FUNCTION_OBJ",
+	ARRAY_OBJ:    "ARRAY_OBJ",
+	MAP_OBJ:      "MAP_OBJ",
+	ERROR_OBJ:    "ERROR_OBJ",
+}
+
 type Object interface {
 	Type() ObjectType
 	Inspect() string
