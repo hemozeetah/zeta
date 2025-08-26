@@ -23,7 +23,10 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.Boolean{Value: node.Value}
 
 	case *ast.Identifier:
-		return nil
+		if val, ok := env.Get(node.Value); ok {
+			return val
+		}
+		return object.NewError("identifier not found: %s", node.Value)
 
 	case *ast.PrefixExpression:
 		return nil
@@ -32,7 +35,11 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return nil
 
 	case *ast.VarStatement:
-		return nil
+		value := Eval(node.Value, env)
+		if object.IsError(value) {
+			return value
+		}
+		env.Set(node.Name.Value, value)
 
 	case *ast.ReturnStatement:
 		return nil
@@ -50,17 +57,28 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return nil
 
 	case *ast.ArrayLiteral:
-		return &object.Array{Elements: evalExpressions(node.Elements, env)}
+		elements := evalExpressions(node.Elements, env)
+		if len(elements) == 1 && object.IsError(elements[0]) {
+			return elements[0]
+		}
+		return &object.Array{Elements: elements}
 
 	case *ast.MapLiteral:
 		pairs := make(map[object.HashKey]object.Pair)
 		for keyNode, valueNode := range node.Pairs {
 			key := Eval(keyNode, env)
+			if object.IsError(key) {
+				return key
+			}
 			hashKey, ok := key.(object.Hasher)
 			if !ok {
-				return nil
+				return object.NewError("key map of type %d is not hashable", key.Type())
 			}
-			pairs[hashKey.HashKey()] = object.Pair{Key: key, Value: Eval(valueNode, env)}
+			value := Eval(valueNode, env)
+			if object.IsError(value) {
+				return value
+			}
+			pairs[hashKey.HashKey()] = object.Pair{Key: key, Value: value}
 		}
 		return &object.Map{Pairs: pairs}
 
@@ -75,6 +93,9 @@ func evalStatements(statements []ast.Statement, env *object.Environment) object.
 	var result object.Object
 	for _, s := range statements {
 		result = Eval(s, env)
+		if object.IsError(result) {
+			break
+		}
 	}
 	return result
 }
@@ -82,7 +103,12 @@ func evalStatements(statements []ast.Statement, env *object.Environment) object.
 func evalExpressions(expressions []ast.Expression, env *object.Environment) []object.Object {
 	var result []object.Object
 	for _, e := range expressions {
-		result = append(result, Eval(e, env))
+		evaluated := Eval(e, env)
+		if object.IsError(evaluated) {
+			result = []object.Object{evaluated}
+			break
+		}
+		result = append(result, evaluated)
 	}
 	return result
 }

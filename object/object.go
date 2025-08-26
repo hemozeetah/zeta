@@ -18,6 +18,7 @@ const (
 	FUNCTION_OBJ
 	ARRAY_OBJ
 	MAP_OBJ
+	ERROR_OBJ
 )
 
 type Object interface {
