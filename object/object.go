@@ -56,13 +56,13 @@ func (s *String) HashKey() HashKey {
 	return HashKey{Type: s.Type(), Value: h.Sum64()}
 }
 
-type Boolean struct {
+type boolean struct {
 	Value bool
 }
 
-func (b *Boolean) Type() ObjectType { return BOOLEAN_OBJ }
-func (b *Boolean) Inspect() string  { return fmt.Sprintf("%t", b.Value) }
-func (b *Boolean) HashKey() HashKey {
+func (b *boolean) Type() ObjectType { return BOOLEAN_OBJ }
+func (b *boolean) Inspect() string  { return fmt.Sprintf("%t", b.Value) }
+func (b *boolean) HashKey() HashKey {
 	var value uint64
 	if b.Value {
 		value = 1

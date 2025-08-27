@@ -114,13 +114,8 @@ func TestEvalBooleanExpression(t *testing.T) {
 }
 
 func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
-	result, ok := obj.(*object.Boolean)
-	if !ok {
-		t.Fatalf("object is not Boolean. got=%T (%+v)", obj, obj)
-		return false
-	}
-	if result.Value != expected {
-		t.Fatalf("object has wrong value. got=%t, want=%t", result.Value, expected)
+	if object.IsTruthy(obj) != expected {
+		t.Fatalf("object %s has wrong truthy. got=%t, want=%t", obj.Inspect(), object.IsTruthy(obj), expected)
 		return false
 	}
 	return true
@@ -201,8 +196,8 @@ false: 6
 		(&object.String{Value: "two"}).HashKey():   2,
 		(&object.String{Value: "three"}).HashKey(): 3,
 		(&object.Integer{Value: 4}).HashKey():      4,
-		(&object.Boolean{Value: true}).HashKey():   5,
-		(&object.Boolean{Value: false}).HashKey():  6,
+		object.TRUE.HashKey():                      5,
+		object.FALSE.HashKey():                     6,
 	}
 
 	if len(result.Pairs) != len(expected) {
