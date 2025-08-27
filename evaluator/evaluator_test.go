@@ -85,6 +85,7 @@ func TestEvalBooleanExpression(t *testing.T) {
 	}{
 		{"true", true},
 		{"false", false},
+		{"null", false},
 		{"1 < 2", true},
 		{"1 > 2", false},
 		{"1 < 1", false},
@@ -142,6 +143,13 @@ func TestEvalBooleanExpression(t *testing.T) {
 		{"[1, 2] <= [1, 2, 3]", true},
 		{"[1, 2] > [1, 2, 3]", false},
 		{"[1, 2] >= [1, 2, 3]", false},
+		//
+		{"null == null", true},
+		{"null != null", false},
+		{"var a = null; a == null", true},
+		{"var a = null; a", false},
+		{"var a = null; a != null", false},
+		{"var a = null; a == null", true},
 	}
 
 	for _, tt := range tests {
@@ -170,6 +178,7 @@ func TestBangOperator(t *testing.T) {
 		{"!!5", true},
 		{`!""`, true},
 		{`!"aa"`, false},
+		{`!null`, true},
 	}
 
 	for _, tt := range tests {

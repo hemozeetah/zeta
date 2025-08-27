@@ -24,6 +24,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.BooleanLiteral:
 		return object.BooleanConstant(node.Value)
 
+	case *ast.NullLiteral:
+		return object.NullConstant()
+
 	case *ast.Identifier:
 		if val, ok := env.Get(node.Value); ok {
 			return val
@@ -229,6 +232,16 @@ func evalInfixExpression(left object.Object, operator string, right object.Objec
 			return object.BooleanConstant(slices.CompareFunc(leftVal, rightVal, cmpFunc) == 1)
 		case ">=":
 			return object.BooleanConstant(slices.CompareFunc(leftVal, rightVal, cmpFunc) >= 0)
+		default:
+			return object.NewError("unknown operator: %s %s %s", object.ObjectMap[left.Type()], operator, object.ObjectMap[right.Type()])
+		}
+
+	case left.Type() == object.NULL_OBJ || right.Type() == object.NULL_OBJ:
+		switch operator {
+		case "==":
+			return object.BooleanConstant(left.Type() ==  right.Type())
+		case "!=":
+			return object.BooleanConstant(left.Type() !=  right.Type())
 		default:
 			return object.NewError("unknown operator: %s %s %s", object.ObjectMap[left.Type()], operator, object.ObjectMap[right.Type()])
 		}
