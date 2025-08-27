@@ -1,6 +1,8 @@
 package evaluator
 
 import (
+	"slices"
+
 	"github.com/hemozeetah/zeta/ast"
 	"github.com/hemozeetah/zeta/object"
 )
@@ -211,10 +213,39 @@ func evalInfixExpression(left object.Object, operator string, right object.Objec
 			return object.NewError("unknown operator: %s %s %s", object.ObjectMap[left.Type()], operator, object.ObjectMap[right.Type()])
 		}
 
+	case left.Type() == object.ARRAY_OBJ && right.Type() == object.ARRAY_OBJ:
+		leftVal := left.(*object.Array).Elements
+		rightVal := right.(*object.Array).Elements
+		switch operator {
+		case "==":
+			return object.BooleanConstant(slices.CompareFunc(leftVal, rightVal, cmpFunc) == 0)
+		case "!=":
+			return object.BooleanConstant(slices.CompareFunc(leftVal, rightVal, cmpFunc) != 0)
+		case "<":
+			return object.BooleanConstant(slices.CompareFunc(leftVal, rightVal, cmpFunc) == -1)
+		case "<=":
+			return object.BooleanConstant(slices.CompareFunc(leftVal, rightVal, cmpFunc) <= 0)
+		case ">":
+			return object.BooleanConstant(slices.CompareFunc(leftVal, rightVal, cmpFunc) == 1)
+		case ">=":
+			return object.BooleanConstant(slices.CompareFunc(leftVal, rightVal, cmpFunc) >= 0)
+		default:
+			return object.NewError("unknown operator: %s %s %s", object.ObjectMap[left.Type()], operator, object.ObjectMap[right.Type()])
+		}
+
 	default:
 		if left.Type() != right.Type() {
 			return object.NewError("type mismatch: %s %s %s", object.ObjectMap[left.Type()], operator, object.ObjectMap[right.Type()])
 		}
 		return object.NewError("unknown operator: %s %s %s", object.ObjectMap[left.Type()], operator, object.ObjectMap[right.Type()])
 	}
+}
+
+func cmpFunc(x, y object.Object) int {
+	if object.IsTruthy(evalInfixExpression(x, "<", y)) {
+		return -1
+	} else if object.IsTruthy(evalInfixExpression(x, ">", y)) {
+		return 1
+	}
+	return 0
 }
