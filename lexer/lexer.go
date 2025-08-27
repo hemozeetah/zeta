@@ -147,4 +147,5 @@ var keywords = map[string]token.TokenType{
 	"return": token.RETURN,
 	"true":   token.TRUE,
 	"false":  token.FALSE,
+	"null":   token.NULL,
 }

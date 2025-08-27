@@ -3,6 +3,7 @@ package object
 var (
 	TRUE  = &boolean{Value: true}
 	FALSE = &boolean{Value: false}
+	NULL =  &null{}
 )
 
 func BooleanConstant(value bool) *boolean {
@@ -12,11 +13,17 @@ func BooleanConstant(value bool) *boolean {
 	return FALSE
 }
 
+func NullConstant() *null {
+	return NULL
+}
+
 func IsTruthy(obj Object) bool {
 	switch obj {
 	case TRUE:
 		return true
 	case FALSE:
+		return false
+	case NULL:
 		return false
 	}
 	switch obj := obj.(type) {

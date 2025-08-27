@@ -165,7 +165,22 @@ func TestBooleanLiteralExpression(t *testing.T) {
 		t.Errorf("bolaen.Value not %t. got=%t", false, boolean.Value)
 	}
 	if boolean.TokenLiteral() != "false" {
-		t.Errorf("boolean.TokenLiteral not %s. got=%s", "5", boolean.TokenLiteral())
+		t.Errorf("boolean.TokenLiteral not %s. got=%s", "false", boolean.TokenLiteral())
+	}
+}
+
+func TestNullLiteralExpression(t *testing.T) {
+	input := "null;"
+
+	program := newProgram(t, input)
+	stmt := expressionStatement(t, program.Statements)
+
+	null, ok := stmt.Expression.(*ast.NullLiteral)
+	if !ok {
+		t.Fatalf("exp not *ast.NullLiteral. got=%T", stmt.Expression)
+	}
+	if null.TokenLiteral() != "null" {
+		t.Errorf("null.TokenLiteral not %s. got=%s", "null", null.TokenLiteral())
 	}
 }
 

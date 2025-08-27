@@ -18,6 +18,7 @@ const (
 	FUNCTION_OBJ
 	ARRAY_OBJ
 	MAP_OBJ
+	NULL_OBJ
 	ERROR_OBJ
 )
 
@@ -130,3 +131,8 @@ func (m *Map) Inspect() string {
 	out.WriteString("}")
 	return out.String()
 }
+
+type null struct{}
+
+func (n *null) Type() ObjectType { return NULL_OBJ }
+func (n *null) Inspect() string  { return "null" }

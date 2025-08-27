@@ -28,6 +28,7 @@ const (
 	RETURN
 	TRUE
 	FALSE
+	NULL
 	// Identifiers
 	IDENT
 	// Operators
