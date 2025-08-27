@@ -172,14 +172,18 @@ func evalInfixExpression(left object.Object, operator string, right object.Objec
 			return &object.Integer{Value: leftVal * rightVal}
 		case "/":
 			return &object.Integer{Value: leftVal / rightVal}
-		case "<":
-			return &object.Boolean{Value: leftVal < rightVal}
-		case ">":
-			return &object.Boolean{Value: leftVal > rightVal}
 		case "==":
 			return &object.Boolean{Value: leftVal == rightVal}
 		case "!=":
 			return &object.Boolean{Value: leftVal != rightVal}
+		case "<":
+			return &object.Boolean{Value: leftVal < rightVal}
+		case "<=":
+			return &object.Boolean{Value: leftVal <= rightVal}
+		case ">":
+			return &object.Boolean{Value: leftVal > rightVal}
+		case ">=":
+			return &object.Boolean{Value: leftVal >= rightVal}
 		default:
 			return object.NewError("unknown operator: %s %s %s", object.ObjectMap[left.Type()], operator, object.ObjectMap[right.Type()])
 		}
@@ -192,11 +196,17 @@ func evalInfixExpression(left object.Object, operator string, right object.Objec
 		rightVal := right.(*object.String).Value
 		return &object.String{Value: leftVal + rightVal}
 
-	case operator == "==":
-		return &object.Boolean{Value: left == right}
-
-	case operator == "!=":
-		return &object.Boolean{Value: left != right}
+	case left.Type() == object.BOOLEAN_OBJ && right.Type() == object.BOOLEAN_OBJ:
+		leftVal := left.(*object.Boolean).Value
+		rightVal := right.(*object.Boolean).Value
+		switch operator {
+		case "==":
+			return &object.Boolean{Value: leftVal == rightVal}
+		case "!=":
+			return &object.Boolean{Value: leftVal != rightVal}
+		default:
+			return object.NewError("unknown operator: %s %s %s", object.ObjectMap[left.Type()], operator, object.ObjectMap[right.Type()])
+		}
 
 	default:
 		if left.Type() != right.Type() {
