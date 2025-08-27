@@ -65,7 +65,17 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalStatements(node.Statements, env)
 
 	case *ast.IfExpression:
-		return nil
+		condition := Eval(node.Condition, env)
+		if object.IsError(condition) {
+			return condition
+		}
+		if object.IsTruthy(condition) {
+			return Eval(node.Consequence, env)
+		} else if node.Alternative != nil {
+			return Eval(node.Alternative, env)
+		} else {
+			return object.NULL
+		}
 
 	case *ast.FunctionLiteral:
 		return &object.Function{Parameters: node.Parameters, Env: env, Body: node.Body}
