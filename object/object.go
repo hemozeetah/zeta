@@ -16,6 +16,7 @@ const (
 	STRING_OBJ
 	BOOLEAN_OBJ
 	FUNCTION_OBJ
+	BUILTIN_OBJ
 	ARRAY_OBJ
 	MAP_OBJ
 	RETURN_VALUE_OBJ
@@ -24,13 +25,16 @@ const (
 )
 
 var ObjectMap = map[ObjectType]string{
-	INTEGER_OBJ:  "INTEGER_OBJ",
-	STRING_OBJ:   "STRING_OBJ",
-	BOOLEAN_OBJ:  "BOOLEAN_OBJ",
-	FUNCTION_OBJ: "FUNCTION_OBJ",
-	ARRAY_OBJ:    "ARRAY_OBJ",
-	MAP_OBJ:      "MAP_OBJ",
-	ERROR_OBJ:    "ERROR_OBJ",
+	INTEGER_OBJ:      "INTEGER_OBJ",
+	STRING_OBJ:       "STRING_OBJ",
+	BOOLEAN_OBJ:      "BOOLEAN_OBJ",
+	FUNCTION_OBJ:     "FUNCTION_OBJ",
+	BUILTIN_OBJ:      "BUILTIN_OBJ",
+	ARRAY_OBJ:        "ARRAY_OBJ",
+	MAP_OBJ:          "MAP_OBJ",
+	RETURN_VALUE_OBJ: "RETURN_VALUE_OBJ",
+	NULL_OBJ:         "NULL_OBJ",
+	ERROR_OBJ:        "ERROR_OBJ",
 }
 
 type Object interface {
@@ -93,6 +97,15 @@ func (f *Function) Inspect() string {
 	out.WriteString("\n}")
 	return out.String()
 }
+
+type BuiltinFunction func(args ...Object) Object
+
+type Builtin struct {
+	Fn BuiltinFunction
+}
+
+func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
+func (b *Builtin) Inspect() string  { return "builtin function" }
 
 type Array struct {
 	Elements []Object

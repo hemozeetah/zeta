@@ -32,6 +32,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if val, ok := env.Get(node.Value); ok {
 			return val
 		}
+		if builtin, ok := builtins[node.Value]; ok {
+			return builtin
+		}
 		return object.NewError("identifier not found: %s", node.Value)
 
 	case *ast.PrefixExpression:
@@ -103,7 +106,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			evaluated := Eval(fn.Body, extendedEnv)
 			return unwrapReturnValue(evaluated)
 
-		// case builtin ?
+		case *object.Builtin:
+			return fn.Fn(args...)
 
 		default:
 			return object.NewError("not a function: %s", object.ObjectMap[fn.Type()])
