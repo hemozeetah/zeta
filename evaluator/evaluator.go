@@ -110,7 +110,38 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.Map{Pairs: pairs}
 
 	case *ast.IndexExpression:
-		return nil
+		left := Eval(node.Left, env)
+		if object.IsError(left) {
+			return left
+		}
+		index := Eval(node.Index, env)
+		if object.IsError(index) {
+			return index
+		}
+		switch {
+		case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
+			arrayObj := left.(*object.Array)
+			idx := index.(*object.Integer).Value
+			if idx < 0 || idx >= int64(len(arrayObj.Elements)) {
+				return object.NULL
+			}
+			return arrayObj.Elements[idx]
+
+		case left.Type() == object.MAP_OBJ:
+			mapObj := left.(*object.Map)
+			key, ok := index.(object.Hasher)
+			if !ok {
+				return object.NewError("unusable as hash key: %s", object.ObjectMap[index.Type()])
+			}
+			pair, ok := mapObj.Pairs[key.HashKey()]
+			if !ok {
+				return object.NULL
+			}
+			return pair.Value
+
+		default:
+			return object.NewError("index operator not supported: %s", object.ObjectMap[left.Type()])
+		}
 	}
 
 	return nil
