@@ -418,3 +418,32 @@ return 1;
 		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
+
+func TestFunctionCalls(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"var identity = fn(x) { x; }; identity(5);", 5},
+		{"var identity = fn(x) { return x; }; identity(5);", 5},
+		{"var double = fn(x) { x * 2; }; double(5);", 10},
+		{"var add = fn(x, y) { x + y; }; add(5, 5);", 10},
+		{"var add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20},
+		{"fn(x) { x; }(5)", 5},
+	}
+
+	for _, tt := range tests {
+		testIntegerObject(t, testEval(tt.input), tt.expected)
+	}
+}
+
+func TestClosures(t *testing.T) {
+	input := `
+var newAdder = fn(x) {
+fn(y) { x + y };
+};
+var addTwo = newAdder(2);
+addTwo(2);`
+
+	testIntegerObject(t, testEval(input), 4)
+}

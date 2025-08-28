@@ -11,10 +11,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
 		evaluated := evalStatements(node.Statements, env)
-		if returnValue, ok := evaluated.(*object.ReturnValue); ok { // unwrap return value
-			return returnValue.Value
-		}
-		return evaluated
+		return unwrapReturnValue(evaluated)
 
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression, env)
@@ -89,7 +86,28 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.Function{Parameters: node.Parameters, Env: env, Body: node.Body}
 
 	case *ast.CallExpression:
-		return nil
+		fn := Eval(node.Function, env)
+		if object.IsError(fn) {
+			return fn
+		}
+		args := evalExpressions(node.Arguments, env)
+		if len(args) == 1 && object.IsError(args[0]) {
+			return args[0]
+		}
+		switch fn := fn.(type) {
+		case *object.Function:
+			extendedEnv := object.NewEnclosedEnvironment(fn.Env)
+			for paramIdx, param := range fn.Parameters {
+				extendedEnv.Set(param.Value, args[paramIdx])
+			}
+			evaluated := Eval(fn.Body, extendedEnv)
+			return unwrapReturnValue(evaluated)
+
+		// case builtin ?
+
+		default:
+			return object.NewError("not a function: %s", object.ObjectMap[fn.Type()])
+		}
 
 	case *ast.ArrayLiteral:
 		elements := evalExpressions(node.Elements, env)
@@ -313,4 +331,11 @@ func cmpFunc(x, y object.Object) int {
 		return 1
 	}
 	return 0
+}
+
+func unwrapReturnValue(obj object.Object) object.Object {
+	if returnValue, ok := obj.(*object.ReturnValue); ok {
+		return returnValue.Value
+	}
+	return obj // naked returns
 }
