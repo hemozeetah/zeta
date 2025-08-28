@@ -18,6 +18,7 @@ const (
 	FUNCTION_OBJ
 	ARRAY_OBJ
 	MAP_OBJ
+	RETURN_VALUE_OBJ
 	NULL_OBJ
 	ERROR_OBJ
 )
@@ -131,6 +132,13 @@ func (m *Map) Inspect() string {
 	out.WriteString("}")
 	return out.String()
 }
+
+type ReturnValue struct {
+	Value Object
+}
+
+func (rv *ReturnValue) Type() ObjectType { return RETURN_VALUE_OBJ }
+func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }
 
 type null struct{}
 

@@ -10,7 +10,11 @@ import (
 func Eval(node ast.Node, env *object.Environment) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
-		return evalStatements(node.Statements, env)
+		evaluated := evalStatements(node.Statements, env)
+		if returnValue, ok := evaluated.(*object.ReturnValue); ok { // unwrap return value
+			return returnValue.Value
+		}
+		return evaluated
 
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression, env)
@@ -59,7 +63,11 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		env.Set(node.Name.Value, value)
 
 	case *ast.ReturnStatement:
-		return nil
+		value := Eval(node.ReturnValue, env)
+		if object.IsError(value) {
+			return value
+		}
+		return &object.ReturnValue{Value: value}
 
 	case *ast.BlockStatement:
 		return evalStatements(node.Statements, env)
@@ -152,6 +160,9 @@ func evalStatements(statements []ast.Statement, env *object.Environment) object.
 	for _, s := range statements {
 		result = Eval(s, env)
 		if object.IsError(result) {
+			break
+		}
+		if result != nil && result.Type() == object.RETURN_VALUE_OBJ {
 			break
 		}
 	}
