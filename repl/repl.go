@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/hemozeetah/zeta/evaluator"
 	"github.com/hemozeetah/zeta/lexer"
+	"github.com/hemozeetah/zeta/object"
 	"github.com/hemozeetah/zeta/parser"
 )
 
@@ -13,6 +15,7 @@ const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+	env := object.NewEnvironment()
 	for {
 		fmt.Fprintf(out, PROMPT)
 		scanned := scanner.Scan()
@@ -26,8 +29,11 @@ func Start(in io.Reader, out io.Writer) {
 			printErrors(out, p.Errors())
 			continue
 		}
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		evaluated := evaluator.Eval(program, env)
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
+		}
 	}
 }
 
